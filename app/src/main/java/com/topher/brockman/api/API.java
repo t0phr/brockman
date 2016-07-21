@@ -7,7 +7,8 @@ import java.util.List;
  * Created by topher on 16/07/16.
  */
 public class API implements Serializable {
-    public String type;
-    public String details;
-
+    public String broadcastType;
+    public String broadcastTitle;
+    public List<Object> broadcastsPerTypeUrls;
+    public List<Broadcast> latestBroadcastsPerType;
 }

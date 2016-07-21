@@ -15,6 +15,15 @@ public class TSchau implements Serializable {
     private String videoUrl;
     private String imgUrl;
     private String date;
+    private String title;
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
     public String getVideoUrl() {
         return videoUrl;

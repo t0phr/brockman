@@ -6,9 +6,8 @@ import android.os.Bundle;
 import android.support.v17.leanback.app.BrowseFragment;
 import android.support.v17.leanback.widget.*;
 import com.google.gson.Gson;
-import com.topher.brockman.api.API;
-import com.topher.brockman.api.Broadcast;
-import com.topher.brockman.api.TSchau;
+import com.google.gson.internal.Streams;
+import com.topher.brockman.api.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,17 +19,29 @@ import java.util.List;
 public class MainFragment extends BrowseFragment
         implements OnItemViewClickedListener {
 
-    public static final String API_URL = "http://www.tagesschau.de/api/";
-    public static final int NUM_OF_TASCHAUS = 12;
+    // public static final String API_URL = "http://www.tagesschau.de/api/";
+    public static final String API_TS_URL =
+            "http://tagesschau.de/api/multimedia/sendung/letztesendungen100~_type-TS.json";
+    public static final String API_TT_URL =
+            "http://tagesschau.de/api/multimedia/sendung/letztesendungen100~_type-TT.json";
+    public static final String API_TSV20_URL =
+            "http://tagesschau.de/api/multimedia/sendung/letztesendungen100~_type-TSV20.json";
+    public static final String ID_REGEX_EXTRACT = "[^0-9]+";
+    public static final String ID_REGEX_REPLACE = "[0-9]+";
+    public static final int NUM_OF_TS = 7;
+    public static final int NUM_OF_TSV20 = 1;
+    public static final int NUM_OF_TT = 5;
     public static final String EXTRA_VIDEO = "extra_video";
 
     private List<TSchau> tschauList = new ArrayList<TSchau>();
+    private List<TThemen> tthemenList = new ArrayList<TThemen>();
+    private List<TSV20> tsv20List = new ArrayList<TSV20>();
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         loadData();
-        setHeadersState(HEADERS_ENABLED);
+        setHeadersState(HEADERS_DISABLED);
         setOnItemViewClickedListener(this);
     }
 
@@ -52,26 +63,40 @@ public class MainFragment extends BrowseFragment
         ArrayObjectAdapter adapter =
                 new ArrayObjectAdapter( new ListRowPresenter() );
         CardPresenter presenter = new CardPresenter();
-        ArrayObjectAdapter listRowAdapter =
+        ArrayObjectAdapter ts_adapter =
                 new ArrayObjectAdapter( presenter );
 
         for (TSchau t : tschauList) {
-            listRowAdapter.add(t);
+            ts_adapter.add(t);
         }
 
-        HeaderItem header = new HeaderItem(adapter.size() - 1, "tagesschau");
-        adapter.add(new ListRow(header, listRowAdapter));
+        HeaderItem ts_header = new HeaderItem(adapter.size() - 1, "tagesschau");
+        adapter.add(new ListRow(ts_header, ts_adapter));
+
+
+        ArrayObjectAdapter tt_adapter =
+                new ArrayObjectAdapter( presenter );
+        for (TThemen tt : tthemenList) {
+            tt_adapter.add(tt);
+        }
+
+        HeaderItem tt_header = new HeaderItem(adapter.size() - 1, "tagesthemen");
+        adapter.add(new ListRow(tt_header, tt_adapter));
+
+
+        ArrayObjectAdapter t20_adapter =
+                new ArrayObjectAdapter( presenter );
+        for (TSV20 t20 : tsv20List) {
+            t20_adapter.add(t20);
+        }
+
+        HeaderItem t20_header = new HeaderItem(adapter.size() - 1, "tagesschau vor 20 Jahren");
+        adapter.add(new ListRow(t20_header, t20_adapter));
 
         setAdapter(adapter);
     }
 
     private void loadData() {
-/*        String json = Utils.loadJSONFromUrl(
-                "http://www.tagesschau.de/api/");
-        Type collection = new TypeToken<ArrayList<API>>(){}.getType();
-        Gson gson = new Gson();
-        mAPIs = gson.fromJson(json, collection);
-        System.out.println(mAPIs.get(0).type + " " + mAPIs.get(0).details);*/
         new DownloadFilesTask().execute();
     }
 
@@ -87,37 +112,109 @@ public class MainFragment extends BrowseFragment
         }
 
         protected Void doInBackground(Void... params) {
-            String latest = Utils.extractLatestTSchau(API_URL);
-            List<String> tschauUrls = new ArrayList<String>();
-            tschauUrls.add(latest);
+            String latestTS = Utils.extractLatestBroadcast(API_TS_URL);
+            String latestTT = Utils.extractLatestBroadcast(API_TT_URL);
+            String latestTSV20 = Utils.extractLatestBroadcast(API_TSV20_URL);
 
-            String id_string = latest.replaceAll("[^0-9]+","");
-            int id = Integer.parseInt(id_string);
-            for (int i = 1; i < NUM_OF_TASCHAUS - 1; i++) {
-                String tschau = latest.replaceAll("[0-9]+",
-                        Integer.toString(id - 2*i));
+            List<String> tschauUrls = new ArrayList<String>();
+            List<String> tthemenUrls = new ArrayList<>();
+            List<String> tsv20Urls = new ArrayList<>();
+
+            tschauUrls.add(latestTS);
+            tthemenUrls.add(latestTT);
+            tsv20Urls.add(latestTSV20);
+
+            String ts_id_string = latestTS.replaceAll(ID_REGEX_EXTRACT,"");
+            int ts_id = Integer.parseInt(ts_id_string);
+
+            String tt_id_string = latestTT.replaceAll(ID_REGEX_EXTRACT, "");
+            int tt_id = Integer.parseInt(tt_id_string);
+
+            String tsv20_id_string = latestTT.replaceAll(ID_REGEX_EXTRACT, "");
+            int tsv20_id = Integer.parseInt(tsv20_id_string);
+
+            for (int i = 1; i < NUM_OF_TS - 1; i++) {
+                String tschau = latestTS.replaceAll(ID_REGEX_REPLACE,
+                        Integer.toString(ts_id - 2*i));
                 tschauUrls.add(tschau);
             }
 
+            for (int i = 1; i < NUM_OF_TT - 1; i++) {
+                String tt = latestTT.replaceAll(ID_REGEX_REPLACE,
+                        Integer.toString(tt_id - 2*i));
+                tthemenUrls.add(tt);
+            }
+
+            for (int i = 1; i < NUM_OF_TSV20 - 1; i++) {
+                String tsv20 = latestTSV20.replaceAll(ID_REGEX_REPLACE,
+                        Integer.toString(tsv20_id - 2*i));
+                tsv20Urls.add(tsv20);
+            }
+
+            Gson gson = new Gson();
+            BroadcastDetails bcd = null;
+
             for (String url : tschauUrls) {
+                bcd = null;
                 String json = Utils.loadJSONFromUrl(url);
-                Gson gson = new Gson();
-                Broadcast bc = null;
+
                 try {
-                    bc = gson.fromJson(json, Broadcast.class);
-                } catch (Exception e) {
+                    bcd = gson.fromJson(json, BroadcastDetails.class);
+                } catch (Exception e) { // TODO: proper exception handling
                     e.printStackTrace();
                 }
 
-                if (bc != null) {
+                if (bcd != null) {
                     TSchau t = new TSchau();
-                    t.setDate(bc.broadcastDate);
-                    t.setImgUrl(bc.getImageUrl());
-                    t.setVideoUrl(bc.getVideoUrl());
-                    t.setLength(Utils.convertLengthString(bc.getVideoDuration()));
+                    t.setDate(bcd.broadcastDate);
+                    t.setImgUrl(bcd.getImageUrl());
+                    t.setVideoUrl(bcd.getVideoUrl());
+                    t.setLength(Utils.convertLengthString(bcd.getVideoDuration()));
+                    t.setTitle(bcd.broadcastTitle);
                     tschauList.add(t);
                 }
+            }
 
+            for (String url : tthemenUrls) {
+                bcd = null;
+                String json = Utils.loadJSONFromUrl(url);
+
+                try {
+                    bcd = gson.fromJson(json, BroadcastDetails.class);
+                } catch (Exception e) { // TODO: proper exception handling
+                    e.printStackTrace();
+                }
+
+                if (bcd != null) {
+                    TThemen tt = new TThemen();
+                    tt.setDate(bcd.broadcastDate);
+                    tt.setImgUrl(bcd.getImageUrl());
+                    tt.setVideoUrl(bcd.getVideoUrl());
+                    tt.setLength(Utils.convertLengthString(bcd.getVideoDuration()));
+                    tt.setTitle(bcd.broadcastTitle);
+                    tthemenList.add(tt);
+                }
+            }
+
+            for (String url : tsv20Urls) {
+                bcd = null;
+                String json = Utils.loadJSONFromUrl(url);
+
+                try {
+                    bcd = gson.fromJson(json, BroadcastDetails.class);
+                } catch (Exception e) { // TODO: proper exception handling
+                    e.printStackTrace();
+                }
+
+                if (bcd != null) {
+                    TSV20 t20 = new TSV20();
+                    t20.setDate(bcd.broadcastDate);
+                    t20.setImgUrl(bcd.getImageUrl());
+                    t20.setVideoUrl(bcd.getTSV20VideoUrl());
+                    t20.setLength(Utils.convertLengthString(bcd.getTSV20Duration()));
+                    t20.setTitle(bcd.broadcastTitle);
+                    tsv20List.add(t20);
+                }
             }
 
             return null;

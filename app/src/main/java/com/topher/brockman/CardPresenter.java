@@ -52,9 +52,11 @@ public class CardPresenter extends Presenter {
 
         if (!TextUtils.isEmpty(video.getImgUrl())) {
             ((ViewHolder) viewHolder).mCardView
-                    .setTitleText(day + ", " + Utils.dateFormatCards.format(video.getDate()) + " Uhr");
+                    .setTitleText(video.getTitle());
             ((ViewHolder) viewHolder).mCardView
-                    .setContentText(Utils.dateFormatDuration.format(
+                    .setContentText(day + ", " +
+                            Utils.dateFormatCards.format(video.getDate()) + " Uhr, " +
+                            Utils.dateFormatDuration.format(
                             new Date(1000 * video.getDuration())));
             ((ViewHolder) viewHolder).mCardView
                     .setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT);

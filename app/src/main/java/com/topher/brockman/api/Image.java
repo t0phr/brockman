@@ -14,6 +14,7 @@ public class Image {
     private ImageList internalImage;
 
     public class ImageVariant {
+        /*
         public String modPremium;
         public String modPremiumHalb;
         public String teaserRelaunch;
@@ -22,7 +23,7 @@ public class Image {
         public String mittel16x9;
         public String gross16x9;
         public String videowebs;
-        public String videowebm;
+        public String videowebm; */
         public String videowebl;
     }
 

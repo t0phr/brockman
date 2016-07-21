@@ -55,11 +55,11 @@ public class Utils {
         return json.toString();
     }
 
-    public static String extractLatestTSchau(String location) {
-        List<String> results = JsonPath.read(loadJSONFromUrl(location),
-                "$..latestBroadcast.details");
+    public static String extractLatestBroadcast(String location) {
+        String results = JsonPath.read(loadJSONFromUrl(location),
+                "$..latestBroadcastsPerType[0].details");
 
-        return results.get(0);
+        return results;
     }
 
     public static int convertLengthString(String s) {

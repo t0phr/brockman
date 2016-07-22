@@ -1,11 +1,16 @@
 package com.topher.brockman;
 
 import android.os.Bundle;
+import android.support.v17.leanback.app.MediaControllerGlue;
 import android.support.v17.leanback.app.PlaybackOverlayFragment;
 import android.support.v17.leanback.widget.*;
+import android.view.View;
 import android.widget.Toast;
 import com.topher.brockman.api.TSchau;
 import com.topher.brockman.api.Video;
+
+import static android.support.v17.leanback.app.PlaybackControlGlue.PLAYBACK_SPEED_FAST_L0;
+import static android.support.v17.leanback.app.PlaybackControlGlue.PLAYBACK_SPEED_NORMAL;
 
 /**
  * Created by topher on 21/07/16.
@@ -15,6 +20,7 @@ public class PlayerControlsFragment extends PlaybackOverlayFragment
 
     private PlayerControlsListener mControlsCallback;
     private TSchau mVideo;
+    private PlaybackGlue mGlue;
 
     private ArrayObjectAdapter mRowsAdapter;
     private ArrayObjectAdapter mPrimaryActionsAdapter;
@@ -30,8 +36,18 @@ public class PlayerControlsFragment extends PlaybackOverlayFragment
     private PlaybackControlsRow.HighQualityAction mHighQualityAction;
     private PlaybackControlsRow.ClosedCaptioningAction mClosedCaptionAction;
 
+    public TSchau getVideo() {
+        return mVideo;
+    }
+
+    public ArrayObjectAdapter getRowsAdapter() {
+        return mRowsAdapter;
+    }
+
     @Override
     public void onActionClicked(Action action) {
+        mGlue.onActionClicked(action);
+        /*
         if(action.getId() == mPlayPauseAction.getId()) {
             if(mPlayPauseAction.getIndex()
                     == PlaybackControlsRow.PlayPauseAction.PLAY) {
@@ -48,7 +64,8 @@ public class PlayerControlsFragment extends PlaybackOverlayFragment
         } else {
             Toast.makeText( getActivity(), "Other action",
                     Toast.LENGTH_SHORT ).show();
-        } }
+        }*/
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -61,10 +78,31 @@ public class PlayerControlsFragment extends PlaybackOverlayFragment
                 .getSerializableExtra(MainFragment.EXTRA_VIDEO);
         setupPlaybackControlsRow();
         setupPresenter();
-        initActions();
-        setupPrimaryActionsRow();
-        setupSecondaryActionsRow();
+        //initActions();
+        //setupPrimaryActionsRow();
+        //setupSecondaryActionsRow();
         setAdapter(mRowsAdapter);
+        mGlue = new PlaybackGlue(this.getContext(), this);
+        mGlue.setControlsRow(mPlaybackControlsRow);
+        mGlue.enableProgressUpdating(true);
+        mGlue.setFadingEnabled(true);
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        mGlue.startPlayback(PLAYBACK_SPEED_NORMAL);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mGlue.pausePlayback();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
     }
 
     private void initActions() {
@@ -103,14 +141,15 @@ public class PlayerControlsFragment extends PlaybackOverlayFragment
     }
 
     private void setupPlaybackControlsRow() {
-        mPlaybackControlsRow = new PlaybackControlsRow( mVideo );
+        mPlaybackControlsRow = new PlaybackControlsRow(mVideo);
         ControlButtonPresenterSelector presenterSelector =
                 new ControlButtonPresenterSelector();
+        /*
         mPrimaryActionsAdapter = new ArrayObjectAdapter(presenterSelector);
         mSecondaryActionsAdapter = new ArrayObjectAdapter(presenterSelector);
         mPlaybackControlsRow.setPrimaryActionsAdapter(mPrimaryActionsAdapter);
         mPlaybackControlsRow.setSecondaryActionsAdapter(
-                mSecondaryActionsAdapter);
+                mSecondaryActionsAdapter);*/
     }
 
     private void setupPresenter() {
@@ -118,7 +157,7 @@ public class PlayerControlsFragment extends PlaybackOverlayFragment
         PlaybackControlsRowPresenter playbackControlsRowPresenter =
                 new PlaybackControlsRowPresenter( new DescriptionPresenter() );
         playbackControlsRowPresenter.setOnActionClickedListener(this);
-        playbackControlsRowPresenter.setSecondaryActionsHidden(false);
+        //playbackControlsRowPresenter.setSecondaryActionsHidden(false);
         ps.addClassPresenter(PlaybackControlsRow.class,
                 playbackControlsRowPresenter);
         ps.addClassPresenter(ListRow.class, new ListRowPresenter());
@@ -135,7 +174,7 @@ public class PlayerControlsFragment extends PlaybackOverlayFragment
             AbstractDetailsDescriptionPresenter {
         @Override
         protected void onBindDescription(ViewHolder viewHolder, Object item) {
-            viewHolder.getTitle().setText("tagesschau");
+            viewHolder.getTitle().setText("");
         }
     }
 }

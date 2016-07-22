@@ -36,7 +36,7 @@ public class BroadcastDetails {
 
     public String getTSV20VideoUrl() {
         try {
-            return videos.get(0).getH264xl();
+            return fullvideo.get(0).getH264xl();
         } catch (NullPointerException e) {
             System.err.println("TSV20 video URL not found in BroadcastDetails object!");
         }
@@ -46,7 +46,7 @@ public class BroadcastDetails {
 
     public String getTSV20Duration() {
         try {
-            return videos.get(0).out;
+            return fullvideo.get(0).out;
         } catch (NullPointerException e) {
             System.err.println("TSV20 duration string not found in BroadcastDetails object!");
         }

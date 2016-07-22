@@ -21,7 +21,14 @@ public class PlayerActivity extends Activity
         mVideoView = (VideoView) findViewById( R.id.video_view );
         mVideo = (TSchau) getIntent().getSerializableExtra(MainFragment.
                 EXTRA_VIDEO);
-        mVideoView.setVideoPath(mVideo.getVideoUrl());
+    }
+
+    public VideoView getVideoView() {
+        return mVideoView;
+    }
+
+    public TSchau getVideo() {
+        return mVideo;
     }
 
     @Override

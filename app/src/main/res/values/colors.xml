@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="card_info_bg_color">#FF101010</color>
+    <color name="playback_row_bg_color">#C0101010</color>
+    <color name="playback_row_progress_color">#2069b7</color>
+</resources>

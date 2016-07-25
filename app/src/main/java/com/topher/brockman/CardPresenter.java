@@ -20,6 +20,8 @@ public class CardPresenter extends Presenter {
     public static final int CARD_WIDTH = 500;
     public static final int CARD_HEIGHT = (int) (CARD_WIDTH * (9.0/16));
 
+    private Context mContext;
+
     static class ViewHolder extends Presenter.ViewHolder {
         private ImageCardView mCardView;
         public ViewHolder(View view) {
@@ -31,9 +33,15 @@ public class CardPresenter extends Presenter {
         }
         public void updateCardViewImage(Context context, String link ) {
             Picasso.with(context).load(link)
-                    .resize(CARD_WIDTH, CARD_HEIGHT).centerCrop()
+                    .resize(CARD_WIDTH, CARD_HEIGHT)
+                    .centerCrop()
                     .into(mCardView.getMainImageView());
         }
+    }
+
+    public CardPresenter(Context context) {
+        super();
+        mContext = context;
     }
 
     @Override
@@ -60,6 +68,9 @@ public class CardPresenter extends Presenter {
                             new Date(1000 * video.getDuration())));
             ((ViewHolder) viewHolder).mCardView
                     .setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT);
+            ((ViewHolder) viewHolder).mCardView
+                    .setInfoAreaBackgroundColor(mContext
+                            .getColor(R.color.card_info_bg_color));
             ((ViewHolder) viewHolder).updateCardViewImage(((ViewHolder) viewHolder)
                     .getCardView().getContext(), video.getImgUrl());
         }

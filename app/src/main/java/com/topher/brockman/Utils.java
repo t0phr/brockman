@@ -1,6 +1,9 @@
 package com.topher.brockman;
 
+import android.text.format.DateUtils;
 import com.jayway.jsonpath.JsonPath;
+import com.topher.brockman.api.TSchau;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -9,6 +12,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -27,6 +32,9 @@ public class Utils {
             new SimpleDateFormat("mm:ss 'min'");
     public static final DateFormat dateFormatCards =
             new SimpleDateFormat("HH:mm", Locale.getDefault());
+    public static final String[] WEEKDAYS = {
+        "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"
+    };
 
     public static String loadJSONFromUrl(String location) {
         if(  location == "" ) {
@@ -55,11 +63,38 @@ public class Utils {
         return json.toString();
     }
 
-    public static String extractLatestBroadcast(String location) {
-        String results = JsonPath.read(loadJSONFromUrl(location),
-                "$..latestBroadcastsPerType[0].details");
+    public static String getContentDescription(TSchau video) {
+        String day;
 
-        return results;
+        Calendar c1 = Calendar.getInstance(); // today
+        c1.add(Calendar.DAY_OF_YEAR, -1); // yesterday
+
+        Calendar c2 = Calendar.getInstance();
+        c2.setTime(video.getDate()); // your date
+
+        String weekday = WEEKDAYS[c2.get(Calendar.DAY_OF_WEEK) - 1];
+
+        if (c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR)) {
+            day = "gestern";
+        } else if (c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR) - 1) {
+            day = "heute";
+        }
+
+        return weekday + ", " +
+                Utils.dateFormatCards.format(video.getDate()) + " Uhr, " +
+                Utils.dateFormatDuration.format(
+                        new Date(1000 * video.getDuration()));
+    }
+
+    public static String extractLatestBroadcast(String location) {
+        String json = loadJSONFromUrl(location);
+        if (json != null) {
+            String results = JsonPath.read(json,
+                    "$..latestBroadcastsPerType[0].details");
+            return results;
+        }
+
+        return null;
     }
 
     public static int convertLengthString(String s) {

@@ -1,16 +1,9 @@
 package com.topher.brockman;
 
 import android.os.Bundle;
-import android.support.v17.leanback.app.MediaControllerGlue;
 import android.support.v17.leanback.app.PlaybackOverlayFragment;
 import android.support.v17.leanback.widget.*;
-import android.view.View;
-import android.widget.Toast;
 import com.topher.brockman.api.TSchau;
-import com.topher.brockman.api.Video;
-
-import static android.support.v17.leanback.app.PlaybackControlGlue.PLAYBACK_SPEED_FAST_L0;
-import static android.support.v17.leanback.app.PlaybackControlGlue.PLAYBACK_SPEED_NORMAL;
 
 /**
  * Created by topher on 21/07/16.
@@ -18,26 +11,51 @@ import static android.support.v17.leanback.app.PlaybackControlGlue.PLAYBACK_SPEE
 public class PlayerControlsFragment extends PlaybackOverlayFragment
         implements OnActionClickedListener {
 
-    private PlayerControlsListener mControlsCallback;
     private TSchau mVideo;
     private PlaybackGlue mGlue;
-
     private ArrayObjectAdapter mRowsAdapter;
-    private ArrayObjectAdapter mPrimaryActionsAdapter;
-    private ArrayObjectAdapter mSecondaryActionsAdapter;
-    private PlaybackControlsRow mPlaybackControlsRow;
-    private PlaybackControlsRow.PlayPauseAction mPlayPauseAction;
-    private PlaybackControlsRow.RepeatAction mRepeatAction;
-    private PlaybackControlsRow.ShuffleAction mShuffleAction;
-    private PlaybackControlsRow.FastForwardAction mFastForwardAction;
-    private PlaybackControlsRow.RewindAction mRewindAction;
-    private PlaybackControlsRow.SkipNextAction mSkipNextAction;
-    private PlaybackControlsRow.SkipPreviousAction mSkipPreviousAction;
-    private PlaybackControlsRow.HighQualityAction mHighQualityAction;
-    private PlaybackControlsRow.ClosedCaptioningAction mClosedCaptionAction;
+    private PlaybackControlsRowPresenter mPresenter;
+
 
     public TSchau getVideo() {
         return mVideo;
+    }
+
+    @Override
+    public void onActionClicked(Action action) {
+        System.out.println("actionClicked PCF");
+
+        mGlue.onActionClicked(action);
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setBackgroundType(PlaybackOverlayFragment.BG_LIGHT);
+        setFadingEnabled(true);
+
+        mVideo = (TSchau) getActivity().getIntent()
+                .getSerializableExtra(MainFragment.EXTRA_VIDEO);
+
+        mGlue = new PlaybackGlue(this.getContext(), this);
+
+        mPresenter = mGlue.createControlsRowAndPresenter();
+        mPresenter.setOnActionClickedListener(this);
+        mPresenter.setBackgroundColor(
+                getContext().getColor(R.color.playback_row_bg_color));
+        mPresenter.setProgressColor(
+                getContext().getColor(R.color.playback_row_progress_color));
+
+        ClassPresenterSelector ps = new ClassPresenterSelector();
+        ps.addClassPresenter(PlaybackControlsRow.class, mPresenter);
+        ps.addClassPresenter(ListRow.class, new ListRowPresenter());
+
+        mRowsAdapter = new ArrayObjectAdapter(ps);
+        mRowsAdapter.add(mGlue.getControlsRow());
+
+        setAdapter(mRowsAdapter);
+
+        mGlue.enableProgressUpdating(true);
     }
 
     public ArrayObjectAdapter getRowsAdapter() {
@@ -45,136 +63,8 @@ public class PlayerControlsFragment extends PlaybackOverlayFragment
     }
 
     @Override
-    public void onActionClicked(Action action) {
-        mGlue.onActionClicked(action);
-        /*
-        if(action.getId() == mPlayPauseAction.getId()) {
-            if(mPlayPauseAction.getIndex()
-                    == PlaybackControlsRow.PlayPauseAction.PLAY) {
-                setFadingEnabled(true);
-                mControlsCallback.play();
-                mRowsAdapter.notifyArrayItemRangeChanged(0, 1);
-            } else {
-                setFadingEnabled( false );
-                mControlsCallback.pause();
-            }
-            ((PlaybackControlsRow.MultiAction) action).nextIndex();
-            mPrimaryActionsAdapter.notifyArrayItemRangeChanged(
-                    mPrimaryActionsAdapter.indexOf(action), 1);
-        } else {
-            Toast.makeText( getActivity(), "Other action",
-                    Toast.LENGTH_SHORT ).show();
-        }*/
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setBackgroundType(PlaybackOverlayFragment.BG_DARK);
-        setFadingEnabled(true);
-
-        mControlsCallback = (PlayerControlsListener) getActivity();
-        mVideo = (TSchau) getActivity().getIntent()
-                .getSerializableExtra(MainFragment.EXTRA_VIDEO);
-        setupPlaybackControlsRow();
-        setupPresenter();
-        //initActions();
-        //setupPrimaryActionsRow();
-        //setupSecondaryActionsRow();
-        setAdapter(mRowsAdapter);
-        mGlue = new PlaybackGlue(this.getContext(), this);
-        mGlue.setControlsRow(mPlaybackControlsRow);
-        mGlue.enableProgressUpdating(true);
-        mGlue.setFadingEnabled(true);
-    }
-
-    @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        mGlue.startPlayback(PLAYBACK_SPEED_NORMAL);
-    }
-
-    @Override
     public void onPause() {
         super.onPause();
-        mGlue.pausePlayback();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    private void initActions() {
-        mPlayPauseAction =
-                new PlaybackControlsRow.PlayPauseAction(getActivity());
-        mRepeatAction =
-                new PlaybackControlsRow.RepeatAction(getActivity());
-        mShuffleAction =
-                new PlaybackControlsRow.ShuffleAction(getActivity());
-        mSkipNextAction =
-                new PlaybackControlsRow.SkipNextAction(getActivity());
-        mSkipPreviousAction =
-                new PlaybackControlsRow.SkipPreviousAction(getActivity());
-        mFastForwardAction =
-                new PlaybackControlsRow.FastForwardAction(getActivity());
-        mRewindAction =
-                new PlaybackControlsRow.RewindAction(getActivity());
-        mHighQualityAction =
-                new PlaybackControlsRow.HighQualityAction(getActivity());
-        mClosedCaptionAction =
-                new PlaybackControlsRow.ClosedCaptioningAction(getActivity());
-    }
-
-    private void setupPrimaryActionsRow() {
-        mPrimaryActionsAdapter.add(mSkipPreviousAction);
-        mPrimaryActionsAdapter.add(mRewindAction);
-        mPrimaryActionsAdapter.add(mPlayPauseAction);
-        mPrimaryActionsAdapter.add(mFastForwardAction);
-        mPrimaryActionsAdapter.add(mSkipNextAction);
-    }
-    private void setupSecondaryActionsRow() {
-        mSecondaryActionsAdapter.add(mRepeatAction);
-        mSecondaryActionsAdapter.add(mShuffleAction);
-        mSecondaryActionsAdapter.add(mHighQualityAction);
-        mSecondaryActionsAdapter.add(mClosedCaptionAction);
-    }
-
-    private void setupPlaybackControlsRow() {
-        mPlaybackControlsRow = new PlaybackControlsRow(mVideo);
-        ControlButtonPresenterSelector presenterSelector =
-                new ControlButtonPresenterSelector();
-        /*
-        mPrimaryActionsAdapter = new ArrayObjectAdapter(presenterSelector);
-        mSecondaryActionsAdapter = new ArrayObjectAdapter(presenterSelector);
-        mPlaybackControlsRow.setPrimaryActionsAdapter(mPrimaryActionsAdapter);
-        mPlaybackControlsRow.setSecondaryActionsAdapter(
-                mSecondaryActionsAdapter);*/
-    }
-
-    private void setupPresenter() {
-        ClassPresenterSelector ps = new ClassPresenterSelector();
-        PlaybackControlsRowPresenter playbackControlsRowPresenter =
-                new PlaybackControlsRowPresenter( new DescriptionPresenter() );
-        playbackControlsRowPresenter.setOnActionClickedListener(this);
-        //playbackControlsRowPresenter.setSecondaryActionsHidden(false);
-        ps.addClassPresenter(PlaybackControlsRow.class,
-                playbackControlsRowPresenter);
-        ps.addClassPresenter(ListRow.class, new ListRowPresenter());
-        mRowsAdapter = new ArrayObjectAdapter(ps);
-        mRowsAdapter.add(mPlaybackControlsRow);
-    }
-
-    public interface PlayerControlsListener {
-        void play();
-        void pause();
-    }
-
-    static class DescriptionPresenter extends
-            AbstractDetailsDescriptionPresenter {
-        @Override
-        protected void onBindDescription(ViewHolder viewHolder, Object item) {
-            viewHolder.getTitle().setText("");
-        }
+        mGlue.pauseView();
     }
 }

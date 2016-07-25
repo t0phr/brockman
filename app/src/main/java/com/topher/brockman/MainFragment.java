@@ -26,11 +26,13 @@ public class MainFragment extends BrowseFragment
             "http://tagesschau.de/api/multimedia/sendung/letztesendungen100~_type-TT.json";
     public static final String API_TSV20_URL =
             "http://tagesschau.de/api/multimedia/sendung/letztesendungen100~_type-TSV20.json";
+    public static final String API_TS20_URL =
+            "http://tagesschau.de/api/multimedia/sendung/letztesendungen100~_type-TS2000.json";
     public static final String ID_REGEX_EXTRACT = "[^0-9]+";
     public static final String ID_REGEX_REPLACE = "[0-9]+";
-    public static final int NUM_OF_TS = 7;
+    public static final int NUM_OF_TS = 5;
     public static final int NUM_OF_TSV20 = 1;
-    public static final int NUM_OF_TT = 5;
+    public static final int NUM_OF_TT = 3;
     public static final String EXTRA_VIDEO = "extra_video";
 
     private List<TSchau> tschauList = new ArrayList<TSchau>();
@@ -62,7 +64,7 @@ public class MainFragment extends BrowseFragment
     private void loadRows() {
         ArrayObjectAdapter adapter =
                 new ArrayObjectAdapter( new ListRowPresenter() );
-        CardPresenter presenter = new CardPresenter();
+        CardPresenter presenter = new CardPresenter(getContext());
         ArrayObjectAdapter ts_adapter =
                 new ArrayObjectAdapter( presenter );
 
@@ -70,7 +72,7 @@ public class MainFragment extends BrowseFragment
             ts_adapter.add(t);
         }
 
-        HeaderItem ts_header = new HeaderItem(adapter.size() - 1, "tagesschau");
+        HeaderItem ts_header = new HeaderItem(adapter.size() - 1, "Tagesschau");
         adapter.add(new ListRow(ts_header, ts_adapter));
 
 
@@ -80,7 +82,7 @@ public class MainFragment extends BrowseFragment
             tt_adapter.add(tt);
         }
 
-        HeaderItem tt_header = new HeaderItem(adapter.size() - 1, "tagesthemen");
+        HeaderItem tt_header = new HeaderItem(adapter.size() - 1, "Tagesthemen");
         adapter.add(new ListRow(tt_header, tt_adapter));
 
 
@@ -90,7 +92,7 @@ public class MainFragment extends BrowseFragment
             t20_adapter.add(t20);
         }
 
-        HeaderItem t20_header = new HeaderItem(adapter.size() - 1, "tagesschau vor 20 Jahren");
+        HeaderItem t20_header = new HeaderItem(adapter.size() - 1, "Tagesschau vor 20 Jahren");
         adapter.add(new ListRow(t20_header, t20_adapter));
 
         setAdapter(adapter);
@@ -133,19 +135,19 @@ public class MainFragment extends BrowseFragment
             String tsv20_id_string = latestTT.replaceAll(ID_REGEX_EXTRACT, "");
             int tsv20_id = Integer.parseInt(tsv20_id_string);
 
-            for (int i = 1; i < NUM_OF_TS - 1; i++) {
+            for (int i = 1; i < NUM_OF_TS; i++) {
                 String tschau = latestTS.replaceAll(ID_REGEX_REPLACE,
                         Integer.toString(ts_id - 2*i));
                 tschauUrls.add(tschau);
             }
 
-            for (int i = 1; i < NUM_OF_TT - 1; i++) {
+            for (int i = 1; i < NUM_OF_TT; i++) {
                 String tt = latestTT.replaceAll(ID_REGEX_REPLACE,
                         Integer.toString(tt_id - 2*i));
                 tthemenUrls.add(tt);
             }
 
-            for (int i = 1; i < NUM_OF_TSV20 - 1; i++) {
+            for (int i = 1; i < NUM_OF_TSV20; i++) {
                 String tsv20 = latestTSV20.replaceAll(ID_REGEX_REPLACE,
                         Integer.toString(tsv20_id - 2*i));
                 tsv20Urls.add(tsv20);

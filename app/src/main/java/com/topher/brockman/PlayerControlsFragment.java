@@ -31,7 +31,7 @@ public class PlayerControlsFragment extends PlaybackOverlayFragment
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setBackgroundType(PlaybackOverlayFragment.BG_LIGHT);
+        setBackgroundType(PlaybackOverlayFragment.BG_NONE);
         setFadingEnabled(true);
 
         mVideo = (TSchau) getActivity().getIntent()

@@ -47,7 +47,8 @@ public class CardPresenter extends Presenter {
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent) {
         ImageCardView cardView = new ImageCardView( parent.getContext() );
-        cardView.setFocusable( true );
+        cardView.setFocusable(true);
+        cardView.setBackgroundResource(R.color.card_bg_color);
         return new ViewHolder(cardView);
     }
 
@@ -55,17 +56,12 @@ public class CardPresenter extends Presenter {
     public void onBindViewHolder(Presenter.ViewHolder viewHolder,
                                  Object item) {
         TSchau video = (TSchau) item;
-        String day = DateUtils.isToday(video.getDate().getTime()) ?
-                "heute" : "gestern";
 
         if (!TextUtils.isEmpty(video.getImgUrl())) {
             ((ViewHolder) viewHolder).mCardView
                     .setTitleText(video.getTitle());
             ((ViewHolder) viewHolder).mCardView
-                    .setContentText(day + ", " +
-                            Utils.dateFormatCards.format(video.getDate()) + " Uhr, " +
-                            Utils.dateFormatDuration.format(
-                            new Date(1000 * video.getDuration())));
+                    .setContentText(Utils.getContentDescription(video));
             ((ViewHolder) viewHolder).mCardView
                     .setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT);
             ((ViewHolder) viewHolder).mCardView

@@ -48,7 +48,7 @@ public class RecommendationService extends IntentService {
                         .setColor(ContextCompat.getColor(getApplicationContext(),
                                 android.R.color.black))
                         .setCategory(Notification.CATEGORY_RECOMMENDATION)
-                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
                         .setContentTitle(ts.getTitle())
                         .setContentText(Utils.getContentDescription(ts))
                         .setLargeIcon(bitmap)

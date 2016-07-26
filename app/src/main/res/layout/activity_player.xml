@@ -6,15 +6,15 @@
     android:background="@android:color/black">
     <VideoView
         android:id="@+id/video_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_centerInParent="true" />
     <ProgressBar
         android:id="@+id/video_progress_bar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:indeterminateTint="@android:color/white"
+        android:indeterminateTint="@color/progress_loading_color"
         style="@android:style/Widget.DeviceDefault.ProgressBar" />
     <fragment
         android:id="@+id/player_controls"

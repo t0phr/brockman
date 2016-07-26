@@ -5,6 +5,10 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v17.leanback.app.BrowseFragment;
 import android.support.v17.leanback.widget.*;
+import android.transition.TransitionInflater;
+import android.transition.TransitionManager;
+import android.view.View;
+import android.view.ViewGroup;
 import com.google.gson.Gson;
 import com.google.gson.internal.Streams;
 import com.topher.brockman.api.*;
@@ -33,6 +37,7 @@ public class MainFragment extends BrowseFragment
     public static final int NUM_OF_TS = 5;
     public static final int NUM_OF_TSV20 = 1;
     public static final int NUM_OF_TT = 3;
+    public static final int NUM_MAX_TRIES = 12;
     public static final String EXTRA_VIDEO = "extra_video";
 
     private List<TSchau> tschauList = new ArrayList<TSchau>();
@@ -42,7 +47,9 @@ public class MainFragment extends BrowseFragment
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        setSearchAffordanceColor(R.color.card_info_bg_color);
         loadData();
+        setBadgeDrawable(getContext().getDrawable(R.drawable.logo));
         setHeadersState(HEADERS_DISABLED);
         setOnItemViewClickedListener(this);
     }
@@ -106,6 +113,7 @@ public class MainFragment extends BrowseFragment
         @Override
         protected void onPostExecute(Void aVoid) {
             loadRows();
+            ((MainActivity) getActivity()).getProgressBar().setVisibility(View.GONE);
         }
 
         @Override

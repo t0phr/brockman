@@ -1,6 +1,7 @@
 package com.topher.brockman;
 
 import android.content.Context;
+import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.support.v17.leanback.app.PlaybackControlGlue;
@@ -70,6 +71,26 @@ public class PlaybackGlue extends PlaybackControlGlue {
             mp.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mp) {
+                    int videoWidth = mp.getVideoWidth();
+                    int videoHeight = mp.getVideoHeight();
+                    float videoProportion = (float) videoWidth / (float) videoHeight;
+
+                    Point screenSize = new Point();
+                    activity.getWindowManager().getDefaultDisplay().getSize(screenSize);
+                    float screenProportion = (float) screenSize.x / (float) screenSize.y;
+
+                    android.view.ViewGroup.LayoutParams lp = activity.getVideoView().getLayoutParams();
+
+                    if (videoProportion > screenProportion) {
+                        lp.width = screenSize.x;
+                        lp.height = (int) ((float) screenSize.x / videoProportion);
+                    } else {
+                        lp.width = (int) (videoProportion * (float) screenSize.y);
+                        lp.height = screenSize.y;
+                    }
+
+                    activity.getVideoView().setLayoutParams(lp);
+
                     activity.getProgressBar().setVisibility(View.GONE);
                     mp.setDisplay(activity.getVideoView().getHolder());
                     startPlayback(PLAYBACK_SPEED_NORMAL);

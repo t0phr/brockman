@@ -72,7 +72,7 @@ public class Utils {
         Calendar c2 = Calendar.getInstance();
         c2.setTime(video.getDate()); // your date
 
-        String weekday = WEEKDAYS[c2.get(Calendar.DAY_OF_WEEK) - 1];
+        day = WEEKDAYS[c2.get(Calendar.DAY_OF_WEEK) - 1];
 
         if (c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR)) {
             day = "gestern";
@@ -80,7 +80,7 @@ public class Utils {
             day = "heute";
         }
 
-        return weekday + ", " +
+        return day + ", " +
                 Utils.dateFormatCards.format(video.getDate()) + " Uhr, " +
                 Utils.dateFormatDuration.format(
                         new Date(1000 * video.getDuration()));

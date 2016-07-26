@@ -43,8 +43,8 @@ public class Video {
     private class MediadataList extends ArrayList<Mediadatum> {
         public String getH264xl() {
             for (Mediadatum m : this) {
-                if (m.h264m != null)
-                    return m.h264m;
+                if (m.h264xl != null)
+                    return m.h264xl;
             }
 
             return null;

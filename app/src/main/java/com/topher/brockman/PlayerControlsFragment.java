@@ -3,7 +3,8 @@ package com.topher.brockman;
 import android.os.Bundle;
 import android.support.v17.leanback.app.PlaybackOverlayFragment;
 import android.support.v17.leanback.widget.*;
-import com.topher.brockman.api.TSchau;
+import com.topher.brockman.api.Broadcast;
+
 
 /**
  * Created by topher on 21/07/16.
@@ -11,20 +12,18 @@ import com.topher.brockman.api.TSchau;
 public class PlayerControlsFragment extends PlaybackOverlayFragment
         implements OnActionClickedListener {
 
-    private TSchau mVideo;
+    private Broadcast mVideo;
     private PlaybackGlue mGlue;
     private ArrayObjectAdapter mRowsAdapter;
     private PlaybackControlsRowPresenter mPresenter;
 
 
-    public TSchau getVideo() {
+    public Broadcast getVideo() {
         return mVideo;
     }
 
     @Override
     public void onActionClicked(Action action) {
-        System.out.println("actionClicked PCF");
-
         mGlue.onActionClicked(action);
     }
 
@@ -34,7 +33,7 @@ public class PlayerControlsFragment extends PlaybackOverlayFragment
         setBackgroundType(PlaybackOverlayFragment.BG_NONE);
         setFadingEnabled(true);
 
-        mVideo = (TSchau) getActivity().getIntent()
+        mVideo = (Broadcast) getActivity().getIntent()
                 .getSerializableExtra(MainFragment.EXTRA_VIDEO);
 
         mGlue = new PlaybackGlue(this.getContext(), this);

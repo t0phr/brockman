@@ -4,21 +4,18 @@ import android.content.Context;
 import android.support.v17.leanback.widget.ImageCardView;
 import android.support.v17.leanback.widget.Presenter;
 import android.text.TextUtils;
-import android.text.format.DateUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import com.squareup.picasso.Picasso;
-import com.topher.brockman.api.TSchau;
-
-import java.util.Date;
+import com.topher.brockman.api.Broadcast;
 
 /**
  * Created by topher on 20/07/16.
  */
 public class CardPresenter extends Presenter {
 
-    public static final int CARD_WIDTH = 500;
-    public static final int CARD_HEIGHT = (int) (CARD_WIDTH * (9.0/16));
+    private static int cardWidth;
+    private static int cardHeight;
 
     private Context mContext;
 
@@ -33,7 +30,7 @@ public class CardPresenter extends Presenter {
         }
         public void updateCardViewImage(Context context, String link ) {
             Picasso.with(context).load(link)
-                    .resize(CARD_WIDTH, CARD_HEIGHT)
+                    .resize(cardWidth, cardHeight)
                     .centerCrop()
                     .into(mCardView.getMainImageView());
         }
@@ -42,6 +39,8 @@ public class CardPresenter extends Presenter {
     public CardPresenter(Context context) {
         super();
         mContext = context;
+        cardWidth = (int) mContext.getResources().getDimension(R.dimen.card_width);
+        cardHeight = (int) (cardWidth * (9.0/16));
     }
 
     @Override
@@ -55,7 +54,7 @@ public class CardPresenter extends Presenter {
     @Override
     public void onBindViewHolder(Presenter.ViewHolder viewHolder,
                                  Object item) {
-        TSchau video = (TSchau) item;
+        Broadcast video = (Broadcast) item;
 
         if (!TextUtils.isEmpty(video.getImgUrl())) {
             ((ViewHolder) viewHolder).mCardView
@@ -63,7 +62,7 @@ public class CardPresenter extends Presenter {
             ((ViewHolder) viewHolder).mCardView
                     .setContentText(Utils.getContentDescription(video));
             ((ViewHolder) viewHolder).mCardView
-                    .setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT);
+                    .setMainImageDimensions(cardWidth, cardHeight);
             ((ViewHolder) viewHolder).mCardView
                     .setInfoAreaBackgroundColor(mContext
                             .getColor(R.color.card_info_bg_color));

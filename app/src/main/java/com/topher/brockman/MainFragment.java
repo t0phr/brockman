@@ -1,18 +1,22 @@
 package com.topher.brockman;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v17.leanback.app.BrowseFragment;
 import android.support.v17.leanback.widget.*;
-import android.transition.TransitionInflater;
-import android.transition.TransitionManager;
+import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import com.google.gson.Gson;
-import com.google.gson.internal.Streams;
+import com.google.gson.JsonSyntaxException;
 import com.topher.brockman.api.*;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,27 +26,22 @@ import java.util.List;
 
 public class MainFragment extends BrowseFragment
         implements OnItemViewClickedListener {
+    private static final String TAG = "MainFragment";
+    private static final boolean DEBUG = false;
 
-    // public static final String API_URL = "http://www.tagesschau.de/api/";
-    public static final String API_TS_URL =
-            "http://tagesschau.de/api/multimedia/sendung/letztesendungen100~_type-TS.json";
-    public static final String API_TT_URL =
-            "http://tagesschau.de/api/multimedia/sendung/letztesendungen100~_type-TT.json";
-    public static final String API_TSV20_URL =
-            "http://tagesschau.de/api/multimedia/sendung/letztesendungen100~_type-TSV20.json";
-    public static final String API_TS20_URL =
-            "http://tagesschau.de/api/multimedia/sendung/letztesendungen100~_type-TS2000.json";
-    public static final String ID_REGEX_EXTRACT = "[^0-9]+";
-    public static final String ID_REGEX_REPLACE = "[0-9]+";
-    public static final int NUM_OF_TS = 5;
-    public static final int NUM_OF_TSV20 = 1;
-    public static final int NUM_OF_TT = 3;
-    public static final int NUM_MAX_TRIES = 12;
+    private static final String ID_REGEX_EXTRACT = "[^0-9]+";
+    private static final String ID_REGEX_REPLACE = "[0-9]+";
+
+    private static final int NUM_OF_TS = 7;
+    private static final int NUM_OF_TSV20 = 1;
+    private static final int NUM_OF_TT = 3;
+    private static final int NUM_MAX_TRIES = 12;
+
     public static final String EXTRA_VIDEO = "extra_video";
 
-    private List<TSchau> tschauList = new ArrayList<TSchau>();
-    private List<TThemen> tthemenList = new ArrayList<TThemen>();
-    private List<TSV20> tsv20List = new ArrayList<TSV20>();
+    private List<Tagesschau> tschauList = new ArrayList<Tagesschau>();
+    private List<Tagesthemen> tthemenList = new ArrayList<Tagesthemen>();
+    private List<TsVor20Jahren> tsVor20JahrenList = new ArrayList<TsVor20Jahren>();
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -59,8 +58,8 @@ public class MainFragment extends BrowseFragment
                               Object item,
                               RowPresenter.ViewHolder rowViewHolder,
                               Row row) {
-        if (item instanceof TSchau) {
-            TSchau video = (TSchau) item;
+        if (item instanceof Broadcast) {
+            Broadcast video = (Broadcast) item;
             Intent intent = new Intent(getActivity(),
                     PlayerActivity.class );
             intent.putExtra(MainFragment.EXTRA_VIDEO, video);
@@ -72,10 +71,10 @@ public class MainFragment extends BrowseFragment
         ArrayObjectAdapter adapter =
                 new ArrayObjectAdapter( new ListRowPresenter() );
         CardPresenter presenter = new CardPresenter(getContext());
+
         ArrayObjectAdapter ts_adapter =
                 new ArrayObjectAdapter( presenter );
-
-        for (TSchau t : tschauList) {
+        for (Tagesschau t : tschauList) {
             ts_adapter.add(t);
         }
 
@@ -85,7 +84,7 @@ public class MainFragment extends BrowseFragment
 
         ArrayObjectAdapter tt_adapter =
                 new ArrayObjectAdapter( presenter );
-        for (TThemen tt : tthemenList) {
+        for (Tagesthemen tt : tthemenList) {
             tt_adapter.add(tt);
         }
 
@@ -95,7 +94,7 @@ public class MainFragment extends BrowseFragment
 
         ArrayObjectAdapter t20_adapter =
                 new ArrayObjectAdapter( presenter );
-        for (TSV20 t20 : tsv20List) {
+        for (TsVor20Jahren t20 : tsVor20JahrenList) {
             t20_adapter.add(t20);
         }
 
@@ -109,11 +108,81 @@ public class MainFragment extends BrowseFragment
         new DownloadFilesTask().execute();
     }
 
-    private class DownloadFilesTask extends AsyncTask<Void, Integer, Void> {
+    private BroadcastDetails retrieveAndParse(String url) throws IOException {
+        BroadcastDetails bcd;
+        Gson gson = new Gson();
+
+        try {
+            String json = Utils.loadJSONFromUrl(url);
+            bcd = gson.fromJson(json, BroadcastDetails.class);
+        } catch (JsonSyntaxException e) {
+            Log.w(TAG, "Answer from server for url "
+                    + url
+                    + " is not in JSON Syntax. Retrying next url...");
+            throw e;
+        } catch (FileNotFoundException e) {
+            Log.w(TAG, "File at url "
+                    + url
+                    + " not found. Retrying next url...");
+            throw e;
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.w(TAG, "Unknown error occurred while trying to access "
+                    + url
+                    + " Retrying next url...");
+            throw e;
+        }
+
+        if (bcd != null) return bcd;
+        else throw new IOException();
+
+    }
+
+    private void showNetworkErrorDialog() {
+        new AlertDialog.Builder(getContext())
+            .setTitle("Server not responding")
+            .setMessage("Do you want to quit or retry?")
+            .setPositiveButton(R.string.error_dialog_answer_quit,
+                    new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    getActivity().finishAffinity();
+                }
+            })
+            .setNegativeButton(R.string.error_dialog_answer_retry,
+                    new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    ((MainActivity) getActivity()).getProgressBar().setVisibility(View.VISIBLE);
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            loadData();
+                        }
+                    }, 5000);
+                }
+            })
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .show();
+    }
+
+    private class TaskStatus {
+        public boolean success = true;
+
+        public TaskStatus fail() {
+            success = false;
+            return this;
+        }
+    }
+
+    private class DownloadFilesTask extends AsyncTask<Void, Integer, TaskStatus> {
         @Override
-        protected void onPostExecute(Void aVoid) {
-            loadRows();
+        protected void onPostExecute(TaskStatus status) {
             ((MainActivity) getActivity()).getProgressBar().setVisibility(View.GONE);
+
+            if (status.success) {
+                loadRows();
+            } else {
+                showNetworkErrorDialog();
+            }
         }
 
         @Override
@@ -121,18 +190,21 @@ public class MainFragment extends BrowseFragment
             super.onProgressUpdate(values);
         }
 
-        protected Void doInBackground(Void... params) {
-            String latestTS = Utils.extractLatestBroadcast(API_TS_URL);
-            String latestTT = Utils.extractLatestBroadcast(API_TT_URL);
-            String latestTSV20 = Utils.extractLatestBroadcast(API_TSV20_URL);
+        protected TaskStatus doInBackground(Void... params) {
+            String latestTS, latestTT, latestTSV20;
 
-            List<String> tschauUrls = new ArrayList<String>();
-            List<String> tthemenUrls = new ArrayList<>();
-            List<String> tsv20Urls = new ArrayList<>();
+            try {
+                latestTS = Utils.extractLatestBroadcast(getResources()
+                        .getString(R.string.api_tagesschau_base_url));
+                latestTT = Utils.extractLatestBroadcast(getResources()
+                        .getString(R.string.api_tagesthemen_base_url));
+                latestTSV20 = Utils.extractLatestBroadcast(getResources()
+                        .getString(R.string.api_tsvor20_base_url));
+            } catch (IOException e) {
+                Log.e(TAG, "Network error. Aborting...");
+                return new TaskStatus().fail();
+            }
 
-            tschauUrls.add(latestTS);
-            tthemenUrls.add(latestTT);
-            tsv20Urls.add(latestTSV20);
 
             String ts_id_string = latestTS.replaceAll(ID_REGEX_EXTRACT,"");
             int ts_id = Integer.parseInt(ts_id_string);
@@ -140,96 +212,78 @@ public class MainFragment extends BrowseFragment
             String tt_id_string = latestTT.replaceAll(ID_REGEX_EXTRACT, "");
             int tt_id = Integer.parseInt(tt_id_string);
 
-            String tsv20_id_string = latestTT.replaceAll(ID_REGEX_EXTRACT, "");
+            String tsv20_id_string = latestTSV20.replaceAll(ID_REGEX_EXTRACT, "");
             int tsv20_id = Integer.parseInt(tsv20_id_string);
 
-            for (int i = 1; i < NUM_OF_TS; i++) {
-                String tschau = latestTS.replaceAll(ID_REGEX_REPLACE,
-                        Integer.toString(ts_id - 2*i));
-                tschauUrls.add(tschau);
-            }
 
-            for (int i = 1; i < NUM_OF_TT; i++) {
-                String tt = latestTT.replaceAll(ID_REGEX_REPLACE,
-                        Integer.toString(tt_id - 2*i));
-                tthemenUrls.add(tt);
-            }
-
-            for (int i = 1; i < NUM_OF_TSV20; i++) {
-                String tsv20 = latestTSV20.replaceAll(ID_REGEX_REPLACE,
-                        Integer.toString(tsv20_id - 2*i));
-                tsv20Urls.add(tsv20);
-            }
-
-            Gson gson = new Gson();
             BroadcastDetails bcd = null;
 
-            for (String url : tschauUrls) {
-                bcd = null;
-                String json = Utils.loadJSONFromUrl(url);
+            int retrieved = 0;
+            for (int i = 0; i < NUM_MAX_TRIES; i++) {
+                String url = latestTS.replaceAll(ID_REGEX_REPLACE,
+                        Integer.toString(ts_id - 2*i));
 
-                try {
-                    bcd = gson.fromJson(json, BroadcastDetails.class);
-                } catch (Exception e) { // TODO: proper exception handling
-                    e.printStackTrace();
-                }
+                try { bcd = retrieveAndParse(url); }
+                catch (Exception e) { continue; }
 
-                if (bcd != null) {
-                    TSchau t = new TSchau();
-                    t.setDate(bcd.broadcastDate);
-                    t.setImgUrl(bcd.getImageUrl());
-                    t.setVideoUrl(bcd.getVideoUrl());
-                    t.setLength(Utils.convertLengthString(bcd.getVideoDuration()));
-                    t.setTitle(bcd.broadcastTitle);
-                    tschauList.add(t);
-                }
-            }
+                Tagesschau t = new Tagesschau();
+                t.setDate(bcd.broadcastDate);
+                t.setImgUrl(bcd.getImageUrl());
+                t.setVideoUrl(bcd.getVideoUrl());
+                t.setLength(Utils.convertLengthString(bcd.getVideoDuration()));
+                t.setTitle(bcd.broadcastTitle);
+                tschauList.add(t);
+                retrieved++;
 
-            for (String url : tthemenUrls) {
-                bcd = null;
-                String json = Utils.loadJSONFromUrl(url);
-
-                try {
-                    bcd = gson.fromJson(json, BroadcastDetails.class);
-                } catch (Exception e) { // TODO: proper exception handling
-                    e.printStackTrace();
-                }
-
-                if (bcd != null) {
-                    TThemen tt = new TThemen();
-                    tt.setDate(bcd.broadcastDate);
-                    tt.setImgUrl(bcd.getImageUrl());
-                    tt.setVideoUrl(bcd.getVideoUrl());
-                    tt.setLength(Utils.convertLengthString(bcd.getVideoDuration()));
-                    tt.setTitle(bcd.broadcastTitle);
-                    tthemenList.add(tt);
+                if (retrieved == NUM_OF_TS) {
+                    break;
                 }
             }
 
-            for (String url : tsv20Urls) {
-                bcd = null;
-                String json = Utils.loadJSONFromUrl(url);
+            retrieved = 0;
+            for (int i = 0; i < NUM_MAX_TRIES; i++) {
+                String url = latestTT.replaceAll(ID_REGEX_REPLACE,
+                        Integer.toString(tt_id - 2*i));
 
-                try {
-                    bcd = gson.fromJson(json, BroadcastDetails.class);
-                } catch (Exception e) { // TODO: proper exception handling
-                    e.printStackTrace();
-                }
+                try { bcd = retrieveAndParse(url); }
+                catch (Exception e) { continue; }
 
-                if (bcd != null) {
-                    TSV20 t20 = new TSV20();
-                    t20.setDate(bcd.broadcastDate);
-                    t20.setImgUrl(bcd.getImageUrl());
-                    t20.setVideoUrl(bcd.getTSV20VideoUrl());
-                    t20.setLength(Utils.convertLengthString(bcd.getTSV20Duration()));
-                    t20.setTitle(bcd.broadcastTitle);
-                    tsv20List.add(t20);
+                Tagesthemen tt = new Tagesthemen();
+                tt.setDate(bcd.broadcastDate);
+                tt.setImgUrl(bcd.getImageUrl());
+                tt.setVideoUrl(bcd.getVideoUrl());
+                tt.setLength(Utils.convertLengthString(bcd.getVideoDuration()));
+                tt.setTitle(bcd.broadcastTitle);
+                tthemenList.add(tt);
+                retrieved++;
+
+                if (retrieved == NUM_OF_TT) {
+                    break;
                 }
             }
 
-            return null;
+            retrieved = 0;
+            for (int i = 0; i < NUM_MAX_TRIES; i++) {
+                String url = latestTSV20.replaceAll(ID_REGEX_REPLACE,
+                        Integer.toString(tsv20_id - 2*i));
+
+                try { bcd = retrieveAndParse(url); }
+                catch (Exception e) { continue; }
+
+                TsVor20Jahren t20 = new TsVor20Jahren();
+                t20.setDate(bcd.broadcastDate);
+                t20.setImgUrl(bcd.getImageUrl());
+                t20.setVideoUrl(bcd.getTSV20VideoUrl());
+                t20.setLength(Utils.convertLengthString(bcd.getTSV20Duration()));
+                t20.setTitle(bcd.broadcastTitle);
+                tsVor20JahrenList.add(t20);
+                retrieved++;
+
+                if (retrieved == NUM_OF_TSV20) {
+                    break;
+                }
+            }
+            return new TaskStatus();
         }
     }
-
-
 }

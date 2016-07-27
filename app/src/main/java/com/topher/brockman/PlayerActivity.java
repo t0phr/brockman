@@ -1,12 +1,10 @@
 package com.topher.brockman;
 
 import android.app.Activity;
-import android.graphics.PorterDuff;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.widget.ProgressBar;
 import android.widget.VideoView;
-import com.topher.brockman.api.TSchau;
+import com.topher.brockman.api.Broadcast;
 
 /**
  * Created by topher on 21/07/16.
@@ -14,7 +12,7 @@ import com.topher.brockman.api.TSchau;
 public class PlayerActivity extends Activity {
     private VideoView mVideoView;
     private ProgressBar mProgressBar;
-    private TSchau mVideo;
+    private Broadcast mVideo;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -22,7 +20,7 @@ public class PlayerActivity extends Activity {
         setContentView(R.layout.activity_player);
         mVideoView = (VideoView) findViewById(R.id.video_view);
         mProgressBar = (ProgressBar) findViewById(R.id.video_progress_bar);
-        mVideo = (TSchau) getIntent().getSerializableExtra(MainFragment.
+        mVideo = (Broadcast) getIntent().getSerializableExtra(MainFragment.
                 EXTRA_VIDEO);
     }
 

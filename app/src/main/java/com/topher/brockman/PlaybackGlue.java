@@ -4,17 +4,19 @@ import android.content.Context;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
+import android.os.Handler;
 import android.support.v17.leanback.app.PlaybackControlGlue;
 import android.support.v17.leanback.app.PlaybackOverlayFragment;
-import android.support.v17.leanback.widget.*;
+import android.support.v17.leanback.widget.Action;
+import android.support.v17.leanback.widget.ArrayObjectAdapter;
+import android.support.v17.leanback.widget.PlaybackControlsRow;
+import android.support.v17.leanback.widget.PlaybackControlsRowPresenter;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.widget.ProgressBar;
-import com.topher.brockman.api.TSchau;
+import com.topher.brockman.api.Broadcast;
 
 import java.io.IOException;
-import android.os.Handler;
 
 import static android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE;
 
@@ -23,19 +25,20 @@ import static android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE;
  */
 public class PlaybackGlue extends PlaybackControlGlue {
     private final static String TAG = "PlaybackGlue";
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     private static int[] seekSpeeds =  {
             PLAYBACK_SPEED_FAST_L0,
             PLAYBACK_SPEED_FAST_L1,
             PLAYBACK_SPEED_FAST_L2,
             PLAYBACK_SPEED_FAST_L3,
-            PLAYBACK_SPEED_FAST_L4};
+            PLAYBACK_SPEED_FAST_L4
+    };
 
     private MediaPlayer mp;
     private int playbackSpeed;
     private boolean hasValidMedia = false;
-    private TSchau video;
+    private Broadcast video;
     private PlayerActivity activity;
     private int supportedActionsMask = ACTION_PLAY_PAUSE | ACTION_FAST_FORWARD | ACTION_REWIND;
 
@@ -98,8 +101,10 @@ public class PlaybackGlue extends PlaybackControlGlue {
             });
 
             hasValidMedia = true;
-        } catch (IOException e) { // TODO: proper exception handling
-            e.printStackTrace();
+        } catch (IOException e) {
+            Log.e(TAG, "Video on url "
+                    + video.getVideoUrl()
+                    + " not found. Check network connextion.");
         }
     }
 
@@ -234,13 +239,12 @@ public class PlaybackGlue extends PlaybackControlGlue {
 
     @Override
     public void onActionClicked(Action action) {
-        System.out.println("onActionClicked");
         super.onActionClicked(action);
     }
 
     @Override
     public boolean onKey(View v, int keyCode, KeyEvent event) {
-        System.out.println("onKey" + ", " + keyCode);
+        if (DEBUG) Log.v(TAG, "onKey" + ", " + keyCode);
 
         if (keyCode == 0) {
             return super.onKey(v, KEYCODE_MEDIA_PLAY_PAUSE, event);
@@ -253,7 +257,7 @@ public class PlaybackGlue extends PlaybackControlGlue {
 
         @Override
         public void run() {
-            //if (DEBUG) Log.v(TAG, "run");
+            if (DEBUG) Log.v(TAG, "run");
 
             updateProgress();
             resumeProgressUpdate();
@@ -261,7 +265,6 @@ public class PlaybackGlue extends PlaybackControlGlue {
     }
 
     private class Seeker implements Runnable {
-        public static final boolean DEBUG = true;
         public static final String TAG = "Seeker";
         private int interval;
         private int speed;

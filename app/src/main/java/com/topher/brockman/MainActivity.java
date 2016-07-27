@@ -3,8 +3,6 @@ package com.topher.brockman;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.transition.Transition;
-import android.transition.TransitionInflater;
 import android.widget.ProgressBar;
 
 /**

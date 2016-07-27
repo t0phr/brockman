@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">Brockman</string>
+    <string name="error_dialog_answer_quit">Quit</string>
+    <string name="error_dialog_answer_retry">Retry</string>
+    <string name="api_tagesschau_base_url">
+        http://tagesschau.de/api/multimedia/sendung/letztesendungen100~_type-TS.json
+    </string>
+    <string name="api_tagesschau20uhr_base_url">
+        http://tagesschau.de/api/multimedia/sendung/letztesendungen100~_type-TS2000.json
+    </string>
+    <string name="api_tagesthemen_base_url">
+        http://tagesschau.de/api/multimedia/sendung/letztesendungen100~_type-TT.json
+    </string>
+    <string name="api_tsvor20_base_url">
+        http://tagesschau.de/api/multimedia/sendung/letztesendungen100~_type-TSV20.json
+    </string>
 </resources>

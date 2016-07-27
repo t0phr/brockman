@@ -1,20 +1,17 @@
 package com.topher.brockman;
 
-import android.text.format.DateUtils;
 import com.jayway.jsonpath.JsonPath;
-import com.topher.brockman.api.TSchau;
+import com.topher.brockman.api.Broadcast;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,11 +29,14 @@ public class Utils {
             new SimpleDateFormat("mm:ss 'min'");
     public static final DateFormat dateFormatCards =
             new SimpleDateFormat("HH:mm", Locale.getDefault());
-    public static final String[] WEEKDAYS = {
+
+    private static final String[] WEEKDAYS = {
         "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"
     };
 
-    public static String loadJSONFromUrl(String location) {
+    public static String loadJSONFromUrl(String location) throws IOException {
+        final String TAG = "loadJSONFromUrl";
+
         if(  location == "" ) {
             return null;
         }
@@ -46,24 +46,18 @@ public class Utils {
         HttpURLConnection urlConnection;
         StringBuffer json = new StringBuffer();
 
-        try {
-            url = new URL(location);
-            urlConnection = (HttpURLConnection) url.openConnection();
-            reader = new BufferedReader(new InputStreamReader(
-                    urlConnection.getInputStream()));
-            for (String line; (line = reader.readLine()) != null;) {
-                json.append(line);
-            }
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        url = new URL(location);
+        urlConnection = (HttpURLConnection) url.openConnection();
+        reader = new BufferedReader(new InputStreamReader(
+                urlConnection.getInputStream()));
+        for (String line; (line = reader.readLine()) != null;) {
+            json.append(line);
         }
 
         return json.toString();
     }
 
-    public static String getContentDescription(TSchau video) {
+    public static String getContentDescription(Broadcast video) {
         String day;
 
         Calendar c1 = Calendar.getInstance(); // today
@@ -86,15 +80,11 @@ public class Utils {
                         new Date(1000 * video.getDuration()));
     }
 
-    public static String extractLatestBroadcast(String location) {
+    public static String extractLatestBroadcast(String location)
+            throws IOException {
         String json = loadJSONFromUrl(location);
-        if (json != null) {
-            String results = JsonPath.read(json,
-                    "$..latestBroadcastsPerType[0].details");
-            return results;
-        }
-
-        return null;
+        return JsonPath.read(json,
+                "$..latestBroadcastsPerType[0].details");
     }
 
     public static int convertLengthString(String s) {

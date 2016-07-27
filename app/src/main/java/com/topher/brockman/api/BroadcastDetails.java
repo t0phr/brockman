@@ -10,9 +10,9 @@ public class BroadcastDetails {
     public String broadcastDate;
     public String type;
     public String details;
-    public List<Video> fullvideo;
-    public List<Video> videos;
-    public List<Image> images;
+    public List<APIVideo> fullvideo;
+    public List<APIVideo> videos;
+    public List<APIImage> images;
 
     public String getImageUrl() {
         try {

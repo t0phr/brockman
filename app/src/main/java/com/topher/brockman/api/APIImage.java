@@ -14,7 +14,6 @@ public class APIImage {
     private ImageList internalImage;
 
     public class ImageVariant {
-        /*
         public String modPremium;
         public String modPremiumHalb;
         public String teaserRelaunch;
@@ -23,24 +22,24 @@ public class APIImage {
         public String mittel16x9;
         public String gross16x9;
         public String videowebs;
-        public String videowebm; */
+        public String videowebm;
         public String videowebl;
     }
 
-    public String getVideoWebL() {
+    public String getImageUrl() {
         if (internalImage == null) {
             internalImage = new ImageList();
             internalImage.addAll(variants);
         }
 
-        return internalImage.getVideoWebL();
+        return internalImage.getImageVariant();
     }
 
     private class ImageList extends ArrayList<ImageVariant> {
-        public String getVideoWebL() {
+        public String getImageVariant() {
             for (ImageVariant iv : this) {
-                if (iv.videowebl != null) {
-                    return iv.videowebl;
+                if (iv.gross16x9 != null) {
+                    return iv.gross16x9;
                 }
             }
 

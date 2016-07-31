@@ -16,9 +16,10 @@ public class BroadcastDetails {
 
     public String getImageUrl() {
         try {
-            return images.get(0).getVideoWebL();
+            return images.get(0).getImageUrl();
         } catch (NullPointerException e) {
-            System.err.println("Image URL not found in BroadcastDetails object!");
+            System.err.println("Image URL not found in " +
+                    "BroadcastDetails object!");
         }
 
         return null;
@@ -26,29 +27,10 @@ public class BroadcastDetails {
 
     public String getVideoUrl() {
         try {
-            return fullvideo.get(0).getH264xl();
+            return fullvideo.get(0).getLarge();
         } catch (NullPointerException e) {
-            System.err.println("Video URL not found in BroadcastDetails object!");
-        }
-
-        return null;
-    }
-
-    public String getTSV20VideoUrl() {
-        try {
-            return fullvideo.get(0).getH264xl();
-        } catch (NullPointerException e) {
-            System.err.println("TSV20 video URL not found in BroadcastDetails object!");
-        }
-
-        return null;
-    }
-
-    public String getTSV20Duration() {
-        try {
-            return fullvideo.get(0).out;
-        } catch (NullPointerException e) {
-            System.err.println("TSV20 duration string not found in BroadcastDetails object!");
+            System.err.println("Video URL not found in " +
+                    "BroadcastDetails object!");
         }
 
         return null;
@@ -58,7 +40,8 @@ public class BroadcastDetails {
         try {
             return fullvideo.get(0).out;
         } catch (NullPointerException e) {
-            System.err.println("Duration string not found in BroadcastDetails object!");
+            System.err.println("Duration string not found in " +
+                    "BroadcastDetails object!");
         }
 
         return null;

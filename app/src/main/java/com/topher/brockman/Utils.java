@@ -1,9 +1,14 @@
 package com.topher.brockman;
 
+import android.util.Log;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.jayway.jsonpath.JsonPath;
 import com.topher.brockman.api.Broadcast;
+import com.topher.brockman.api.Tagesschau24;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -23,16 +28,53 @@ public class Utils {
 
     private Utils() {}
 
-    public static final DateFormat dateFormatIn =
+    public static final DateFormat dFBroadcastInput =
             new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'.000'ZZZZ");
-    public static final DateFormat dateFormatDuration =
+    public static final DateFormat dFDuration =
             new SimpleDateFormat("mm:ss 'min'");
-    public static final DateFormat dateFormatCards =
+    public static final DateFormat dFBroadcastTime =
             new SimpleDateFormat("HH:mm", Locale.getDefault());
+    public static final DateFormat dFLiveStreamInput =
+            new SimpleDateFormat("HH:mm");
+    public static final DateFormat dFLiveStreamBroadcastTime =
+            new SimpleDateFormat("HH:mm",
+                    Locale.getDefault());
 
     private static final String[] WEEKDAYS = {
         "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"
     };
+
+    public static <T> T parseJsonToClass(String url, Class<T> c)
+            throws IOException {
+        final String TAG = "parseJsonToClass";
+
+        T t;
+        Gson gson = new Gson();
+
+        try {
+            String json = Utils.loadJSONFromUrl(url);
+            t = gson.fromJson(json, c);
+        } catch (JsonSyntaxException e) {
+            Log.w(TAG, "Answer from server for url "
+                    + url
+                    + " is not in JSON Syntax.");
+            throw e;
+        } catch (FileNotFoundException e) {
+            Log.w(TAG, "File at url "
+                    + url
+                    + " not found.");
+            throw e;
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.w(TAG, "Unknown error occurred while trying to access "
+                    + url);
+            throw e;
+        }
+
+        if (t != null) return t;
+        else throw new IOException();
+
+    }
 
     public static String loadJSONFromUrl(String location) throws IOException {
         final String TAG = "loadJSONFromUrl";
@@ -75,9 +117,14 @@ public class Utils {
         }
 
         return day + ", " +
-                Utils.dateFormatCards.format(video.getDate()) + " Uhr, " +
-                Utils.dateFormatDuration.format(
+                Utils.dFBroadcastTime.format(video.getDate()) + " Uhr, " +
+                Utils.dFDuration.format(
                         new Date(1000 * video.getDuration()));
+    }
+
+    public static String getContentDescription(Tagesschau24 video) {
+        return "Nächste Sendung " + Utils.dFLiveStreamBroadcastTime
+                .format(video.getNextStreamDate()) + " Uhr";
     }
 
     public static String extractLatestBroadcast(String location)

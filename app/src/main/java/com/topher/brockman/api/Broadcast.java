@@ -1,5 +1,6 @@
 package com.topher.brockman.api;
 
+import android.util.Log;
 import com.topher.brockman.Utils;
 
 import java.io.Serializable;
@@ -9,11 +10,13 @@ import java.util.Date;
 /**
  * Created by t0phr_000 on 21.07.2016.
  */
-public class Broadcast implements Serializable{
+public class Broadcast implements Playable {
+    private static final String TAG = "Broadcast";
     private String videoUrl;
     private String imgUrl;
     private String date;
     private String title;
+    private int length;
 
     public String getTitle() {
         return title;
@@ -42,9 +45,9 @@ public class Broadcast implements Serializable{
     public Date getDate() {
         // "2016-07-20T16:00:00.000+02:00"
         try {
-            return Utils.dateFormatIn.parse(date);
+            return Utils.dFBroadcastInput.parse(date);
         } catch (ParseException e) {
-            System.err.println("Could not parse date string! " + date);
+            Log.e(TAG, "Could not parse date string! " + date);
         }
 
         return new Date(0);
@@ -63,5 +66,8 @@ public class Broadcast implements Serializable{
         this.length = length;
     }
 
-    private int length;
+    @Override
+    public boolean isLiveStream() {
+        return false;
+    }
 }

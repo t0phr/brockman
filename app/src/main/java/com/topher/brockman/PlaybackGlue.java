@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import com.topher.brockman.api.Broadcast;
+import com.topher.brockman.api.Playable;
 
 import java.io.IOException;
 
@@ -38,7 +39,7 @@ public class PlaybackGlue extends PlaybackControlGlue {
     private MediaPlayer mp;
     private int playbackSpeed;
     private boolean hasValidMedia = false;
-    private Broadcast video;
+    private Playable video;
     private PlayerActivity activity;
     private int supportedActionsMask = ACTION_PLAY_PAUSE | ACTION_FAST_FORWARD | ACTION_REWIND;
 
@@ -67,6 +68,11 @@ public class PlaybackGlue extends PlaybackControlGlue {
         progressUpdater = new ProgressUpdater();
         activity = (PlayerActivity) fragment.getActivity();
         video = ((PlayerControlsFragment) fragment).getVideo();
+
+        if (video.isLiveStream())
+            supportedActionsMask = supportedActionsMask
+                    & ~ACTION_FAST_FORWARD
+                    & ~ACTION_REWIND;
 
         try {
             mp.setDataSource(video.getVideoUrl());
@@ -100,6 +106,13 @@ public class PlaybackGlue extends PlaybackControlGlue {
                 }
             });
 
+            mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    activity.finish();
+                }
+            });
+
             hasValidMedia = true;
         } catch (IOException e) {
             Log.e(TAG, "Video on url "
@@ -126,7 +139,7 @@ public class PlaybackGlue extends PlaybackControlGlue {
 
     @Override
     public CharSequence getMediaTitle() {
-        return video.getTitle();
+        return null;
     }
 
     @Override

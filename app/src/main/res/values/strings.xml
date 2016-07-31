@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Brockman</string>
+    <string name="app_name">nachrichten</string>
     <string name="error_dialog_answer_quit">Quit</string>
     <string name="error_dialog_answer_retry">Retry</string>
     <string name="api_tagesschau_base_url">
@@ -13,5 +13,15 @@
     </string>
     <string name="api_tsvor20_base_url">
         http://tagesschau.de/api/multimedia/sendung/letztesendungen100~_type-TSV20.json
+    </string>
+    <string name="api_base_url">
+        http://www.tagesschau.de/api
+    </string>
+    <string name="api_t24_image_url">
+        <!--http://www.tagesschau.de/image/sendung/ard_portal_vorspann_ts.jpg-->
+        http://www.tagesschau.de/multimedia/bilder/tagesschauapp104~_v-grossfrei16x9.jpg
+    </string>
+    <string name="ts24_date_substitute">
+        live
     </string>
 </resources>

@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.widget.ProgressBar;
 import android.widget.VideoView;
 import com.topher.brockman.api.Broadcast;
+import com.topher.brockman.api.Playable;
 
 /**
  * Created by topher on 21/07/16.
@@ -12,7 +13,7 @@ import com.topher.brockman.api.Broadcast;
 public class PlayerActivity extends Activity {
     private VideoView mVideoView;
     private ProgressBar mProgressBar;
-    private Broadcast mVideo;
+    private Playable mVideo;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -20,7 +21,7 @@ public class PlayerActivity extends Activity {
         setContentView(R.layout.activity_player);
         mVideoView = (VideoView) findViewById(R.id.video_view);
         mProgressBar = (ProgressBar) findViewById(R.id.video_progress_bar);
-        mVideo = (Broadcast) getIntent().getSerializableExtra(MainFragment.
+        mVideo = (Playable) getIntent().getSerializableExtra(MainFragment.
                 EXTRA_VIDEO);
     }
 

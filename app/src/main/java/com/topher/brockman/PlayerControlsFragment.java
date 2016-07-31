@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.v17.leanback.app.PlaybackOverlayFragment;
 import android.support.v17.leanback.widget.*;
 import com.topher.brockman.api.Broadcast;
+import com.topher.brockman.api.Playable;
 
 
 /**
@@ -12,13 +13,13 @@ import com.topher.brockman.api.Broadcast;
 public class PlayerControlsFragment extends PlaybackOverlayFragment
         implements OnActionClickedListener {
 
-    private Broadcast mVideo;
+    private Playable mVideo;
     private PlaybackGlue mGlue;
     private ArrayObjectAdapter mRowsAdapter;
     private PlaybackControlsRowPresenter mPresenter;
 
 
-    public Broadcast getVideo() {
+    public Playable getVideo() {
         return mVideo;
     }
 
@@ -31,9 +32,8 @@ public class PlayerControlsFragment extends PlaybackOverlayFragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setBackgroundType(PlaybackOverlayFragment.BG_NONE);
-        setFadingEnabled(true);
 
-        mVideo = (Broadcast) getActivity().getIntent()
+        mVideo = (Playable) getActivity().getIntent()
                 .getSerializableExtra(MainFragment.EXTRA_VIDEO);
 
         mGlue = new PlaybackGlue(this.getContext(), this);

@@ -3,7 +3,6 @@ package com.topher.brockman;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -39,9 +38,10 @@ public class MainFragment extends BrowseFragment
 
     public static final String EXTRA_VIDEO = "extra_video";
 
-    private List<Tagesschau> tschauList = new ArrayList<Tagesschau>();
-    private List<Tagesthemen> tthemenList = new ArrayList<Tagesthemen>();
-    private List<TsVor20Jahren> tsVor20JahrenList = new ArrayList<TsVor20Jahren>();
+    private List<Tagesschau> tsList = new ArrayList<Tagesschau>();
+    private List<Tagesthemen> ttList = new ArrayList<Tagesthemen>();
+    private List<TsVor20Jahren> t20List = new ArrayList<TsVor20Jahren>();
+    private Tagesschau24 t24;
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -58,8 +58,8 @@ public class MainFragment extends BrowseFragment
                               Object item,
                               RowPresenter.ViewHolder rowViewHolder,
                               Row row) {
-        if (item instanceof Broadcast) {
-            Broadcast video = (Broadcast) item;
+        if (item instanceof Playable) {
+            Playable video = (Playable) item;
             Intent intent = new Intent(getActivity(),
                     PlayerActivity.class );
             intent.putExtra(MainFragment.EXTRA_VIDEO, video);
@@ -72,9 +72,13 @@ public class MainFragment extends BrowseFragment
                 new ArrayObjectAdapter( new ListRowPresenter() );
         CardPresenter presenter = new CardPresenter(getContext());
 
+
         ArrayObjectAdapter ts_adapter =
                 new ArrayObjectAdapter( presenter );
-        for (Tagesschau t : tschauList) {
+        if (t24 != null)
+            ts_adapter.add(t24);
+
+        for (Tagesschau t : tsList) {
             ts_adapter.add(t);
         }
 
@@ -84,7 +88,7 @@ public class MainFragment extends BrowseFragment
 
         ArrayObjectAdapter tt_adapter =
                 new ArrayObjectAdapter( presenter );
-        for (Tagesthemen tt : tthemenList) {
+        for (Tagesthemen tt : ttList) {
             tt_adapter.add(tt);
         }
 
@@ -94,7 +98,7 @@ public class MainFragment extends BrowseFragment
 
         ArrayObjectAdapter t20_adapter =
                 new ArrayObjectAdapter( presenter );
-        for (TsVor20Jahren t20 : tsVor20JahrenList) {
+        for (TsVor20Jahren t20 : t20List) {
             t20_adapter.add(t20);
         }
 
@@ -108,72 +112,74 @@ public class MainFragment extends BrowseFragment
         new DownloadFilesTask().execute();
     }
 
-    private BroadcastDetails retrieveAndParse(String url) throws IOException {
-        BroadcastDetails bcd;
-        Gson gson = new Gson();
-
-        try {
-            String json = Utils.loadJSONFromUrl(url);
-            bcd = gson.fromJson(json, BroadcastDetails.class);
-        } catch (JsonSyntaxException e) {
-            Log.w(TAG, "Answer from server for url "
-                    + url
-                    + " is not in JSON Syntax. Retrying next url...");
-            throw e;
-        } catch (FileNotFoundException e) {
-            Log.w(TAG, "File at url "
-                    + url
-                    + " not found. Retrying next url...");
-            throw e;
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.w(TAG, "Unknown error occurred while trying to access "
-                    + url
-                    + " Retrying next url...");
-            throw e;
-        }
-
-        if (bcd != null) return bcd;
-        else throw new IOException();
-
-    }
-
-    private void showNetworkErrorDialog() {
-        new AlertDialog.Builder(getContext())
-            .setTitle("Server not responding")
-            .setMessage("Do you want to quit or retry?")
-            .setPositiveButton(R.string.error_dialog_answer_quit,
-                    new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int which) {
-                    getActivity().finishAffinity();
-                }
-            })
-            .setNegativeButton(R.string.error_dialog_answer_retry,
-                    new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int which) {
-                    ((MainActivity) getActivity()).getProgressBar().setVisibility(View.VISIBLE);
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            loadData();
-                        }
-                    }, 5000);
-                }
-            })
-            .setIcon(android.R.drawable.ic_dialog_alert)
-            .show();
-    }
-
-    private class TaskStatus {
-        public boolean success = true;
-
-        public TaskStatus fail() {
-            success = false;
-            return this;
-        }
-    }
-
     private class DownloadFilesTask extends AsyncTask<Void, Integer, TaskStatus> {
+
+        private void showNetworkErrorDialog() {
+            new AlertDialog.Builder(getContext())
+                    .setTitle("Server not responding")
+                    .setMessage("Do you want to quit or retry?")
+                    .setPositiveButton(R.string.error_dialog_answer_quit,
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    getActivity().finishAffinity();
+                                }
+                            })
+                    .setNegativeButton(R.string.error_dialog_answer_retry,
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    ((MainActivity) getActivity()).getProgressBar().setVisibility(View.VISIBLE);
+                                    new Handler().postDelayed(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            loadData();
+                                        }
+                                    }, 5000);
+                                }
+                            })
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
+        }
+
+        private <T extends Broadcast>
+        void retrieveBroadcasts(String baseUrl, int broadcstId, List<T> list,
+                                int count, Class<T> c) {
+            BroadcastDetails bcd = null;
+
+            int retrieved = 0;
+            for (int i = 0; i < NUM_MAX_TRIES; i++) {
+                String url = baseUrl.replaceAll(ID_REGEX_REPLACE,
+                        Integer.toString(broadcstId - 2*i));
+
+                try { bcd = Utils.parseJsonToClass(url,
+                        BroadcastDetails.class); }
+                catch (Exception e) {
+                    if (i < NUM_MAX_TRIES - 1)
+                        Log.w(TAG, "Retrying next url.");
+                    continue;
+                }
+
+                T t;
+                try { t = c.newInstance(); }
+                catch (Exception e) {
+                    Log.e(TAG, "retrieveBroadcasts() called with " +
+                            "incompatible class type.");
+                    return;
+                }
+
+                t.setDate(bcd.broadcastDate);
+                t.setImgUrl(bcd.getImageUrl());
+                t.setVideoUrl(bcd.getVideoUrl());
+                t.setLength(Utils.convertLengthString(bcd.getVideoDuration()));
+                t.setTitle(bcd.broadcastTitle);
+                list.add(t);
+                retrieved++;
+
+                if (retrieved == count) {
+                    break;
+                }
+            }
+        }
+
         @Override
         protected void onPostExecute(TaskStatus status) {
             ((MainActivity) getActivity()).getProgressBar().setVisibility(View.GONE);
@@ -191,14 +197,14 @@ public class MainFragment extends BrowseFragment
         }
 
         protected TaskStatus doInBackground(Void... params) {
-            String latestTS, latestTT, latestTSV20;
+            String latestTS, latestTT, latestT20;
 
             try {
                 latestTS = Utils.extractLatestBroadcast(getResources()
                         .getString(R.string.api_tagesschau_base_url));
                 latestTT = Utils.extractLatestBroadcast(getResources()
                         .getString(R.string.api_tagesthemen_base_url));
-                latestTSV20 = Utils.extractLatestBroadcast(getResources()
+                latestT20 = Utils.extractLatestBroadcast(getResources()
                         .getString(R.string.api_tsvor20_base_url));
             } catch (IOException e) {
                 Log.e(TAG, "Network error. Aborting...");
@@ -212,77 +218,27 @@ public class MainFragment extends BrowseFragment
             String tt_id_string = latestTT.replaceAll(ID_REGEX_EXTRACT, "");
             int tt_id = Integer.parseInt(tt_id_string);
 
-            String tsv20_id_string = latestTSV20.replaceAll(ID_REGEX_EXTRACT, "");
+            String tsv20_id_string = latestT20.replaceAll(ID_REGEX_EXTRACT, "");
             int tsv20_id = Integer.parseInt(tsv20_id_string);
 
 
-            BroadcastDetails bcd = null;
+            retrieveBroadcasts(latestTS, ts_id, tsList, NUM_OF_TS,
+                    Tagesschau.class);
 
-            int retrieved = 0;
-            for (int i = 0; i < NUM_MAX_TRIES; i++) {
-                String url = latestTS.replaceAll(ID_REGEX_REPLACE,
-                        Integer.toString(ts_id - 2*i));
+            retrieveBroadcasts(latestTT, tt_id, ttList, NUM_OF_TT,
+                    Tagesthemen.class);
 
-                try { bcd = retrieveAndParse(url); }
-                catch (Exception e) { continue; }
+            retrieveBroadcasts(latestT20, tsv20_id, t20List,
+                    NUM_OF_TSV20, TsVor20Jahren.class);
 
-                Tagesschau t = new Tagesschau();
-                t.setDate(bcd.broadcastDate);
-                t.setImgUrl(bcd.getImageUrl());
-                t.setVideoUrl(bcd.getVideoUrl());
-                t.setLength(Utils.convertLengthString(bcd.getVideoDuration()));
-                t.setTitle(bcd.broadcastTitle);
-                tschauList.add(t);
-                retrieved++;
-
-                if (retrieved == NUM_OF_TS) {
-                    break;
-                }
+            try { t24 = Utils.parseJsonToClass(
+                    getResources().getString(R.string.api_base_url),
+                    API.class).getTagesschau24();
+                t24.setImgUrl(getResources().getString(R.string.api_t24_image_url));
+            } catch (IOException e) {
+                Log.e(TAG, "Error retrieving tagesschau24 livestream, skipping.");
             }
 
-            retrieved = 0;
-            for (int i = 0; i < NUM_MAX_TRIES; i++) {
-                String url = latestTT.replaceAll(ID_REGEX_REPLACE,
-                        Integer.toString(tt_id - 2*i));
-
-                try { bcd = retrieveAndParse(url); }
-                catch (Exception e) { continue; }
-
-                Tagesthemen tt = new Tagesthemen();
-                tt.setDate(bcd.broadcastDate);
-                tt.setImgUrl(bcd.getImageUrl());
-                tt.setVideoUrl(bcd.getVideoUrl());
-                tt.setLength(Utils.convertLengthString(bcd.getVideoDuration()));
-                tt.setTitle(bcd.broadcastTitle);
-                tthemenList.add(tt);
-                retrieved++;
-
-                if (retrieved == NUM_OF_TT) {
-                    break;
-                }
-            }
-
-            retrieved = 0;
-            for (int i = 0; i < NUM_MAX_TRIES; i++) {
-                String url = latestTSV20.replaceAll(ID_REGEX_REPLACE,
-                        Integer.toString(tsv20_id - 2*i));
-
-                try { bcd = retrieveAndParse(url); }
-                catch (Exception e) { continue; }
-
-                TsVor20Jahren t20 = new TsVor20Jahren();
-                t20.setDate(bcd.broadcastDate);
-                t20.setImgUrl(bcd.getImageUrl());
-                t20.setVideoUrl(bcd.getTSV20VideoUrl());
-                t20.setLength(Utils.convertLengthString(bcd.getTSV20Duration()));
-                t20.setTitle(bcd.broadcastTitle);
-                tsVor20JahrenList.add(t20);
-                retrieved++;
-
-                if (retrieved == NUM_OF_TSV20) {
-                    break;
-                }
-            }
             return new TaskStatus();
         }
     }

@@ -31,13 +31,26 @@ public class APIVideo {
         public String adaptivestreaming;
     }
 
-    public String getH264xl() {
+    public String getLarge() {
+        checkInternal();
+        return internalMediadata.getH264xl();
+    }
+
+    public String getMedium() {
+        checkInternal();
+        return internalMediadata.getH264l();
+    }
+
+    public String getSmall() {
+        checkInternal();
+        return internalMediadata.getH264m();
+    }
+
+    private void checkInternal() {
         if (internalMediadata == null) {
             internalMediadata = new MediadataList();
             internalMediadata.addAll(mediadata);
         }
-
-        return internalMediadata.getH264xl();
     }
 
     private class MediadataList extends ArrayList<Mediadatum> {
@@ -45,6 +58,23 @@ public class APIVideo {
             for (Mediadatum m : this) {
                 if (m.h264xl != null)
                     return m.h264xl;
+            }
+
+            return null;
+        }
+
+        public String getH264l() {
+            for (Mediadatum m : this) {
+                if (m.h264l != null)
+                    return m.h264l;
+            }
+
+            return null;
+        }
+        public String getH264m() {
+            for (Mediadatum m : this) {
+                if (m.h264m != null)
+                    return m.h264m;
             }
 
             return null;

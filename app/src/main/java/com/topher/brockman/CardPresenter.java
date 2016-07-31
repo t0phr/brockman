@@ -1,6 +1,7 @@
 package com.topher.brockman;
 
 import android.content.Context;
+import android.graphics.Point;
 import android.support.v17.leanback.widget.ImageCardView;
 import android.support.v17.leanback.widget.Presenter;
 import android.text.TextUtils;
@@ -8,6 +9,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import com.squareup.picasso.Picasso;
 import com.topher.brockman.api.Broadcast;
+import com.topher.brockman.api.Playable;
+import com.topher.brockman.api.Tagesschau24;
 
 /**
  * Created by topher on 20/07/16.
@@ -20,7 +23,7 @@ public class CardPresenter extends Presenter {
     private Context mContext;
 
     static class ViewHolder extends Presenter.ViewHolder {
-        private ImageCardView mCardView;
+        protected ImageCardView mCardView;
         public ViewHolder(View view) {
             super(view);
             mCardView = (ImageCardView) view;
@@ -29,9 +32,9 @@ public class CardPresenter extends Presenter {
             return mCardView;
         }
         public void updateCardViewImage(Context context, String link ) {
-            Picasso.with(context).load(link)
-                    .resize(cardWidth, cardHeight)
-                    .centerCrop()
+            Picasso.with(context)
+                    .load(link)
+                    //.centerCrop()
                     .into(mCardView.getMainImageView());
         }
     }
@@ -41,6 +44,18 @@ public class CardPresenter extends Presenter {
         mContext = context;
         cardWidth = (int) mContext.getResources().getDimension(R.dimen.card_width);
         cardHeight = (int) (cardWidth * (9.0/16));
+    }
+
+    public int getCardWidth() {
+        return cardWidth;
+    }
+
+    public int getCardHeight() {
+        return cardHeight;
+    }
+
+    public Context getContext() {
+        return mContext;
     }
 
     @Override
@@ -54,21 +69,32 @@ public class CardPresenter extends Presenter {
     @Override
     public void onBindViewHolder(Presenter.ViewHolder viewHolder,
                                  Object item) {
-        Broadcast video = (Broadcast) item;
+        Playable video = (Playable) item;
+        Point dim;
 
-        if (!TextUtils.isEmpty(video.getImgUrl())) {
-            ((ViewHolder) viewHolder).mCardView
-                    .setTitleText(video.getTitle());
-            ((ViewHolder) viewHolder).mCardView
-                    .setContentText(Utils.getContentDescription(video));
-            ((ViewHolder) viewHolder).mCardView
-                    .setMainImageDimensions(cardWidth, cardHeight);
-            ((ViewHolder) viewHolder).mCardView
-                    .setInfoAreaBackgroundColor(mContext
-                            .getColor(R.color.card_info_bg_color));
-            ((ViewHolder) viewHolder).updateCardViewImage(((ViewHolder) viewHolder)
-                    .getCardView().getContext(), video.getImgUrl());
+
+        if (TextUtils.isEmpty(video.getImgUrl()))
+            return;
+
+        ImageCardView card = ((ViewHolder) viewHolder).mCardView;
+        String contentText;
+
+        if (video instanceof Broadcast) {
+            contentText = Utils.getContentDescription((Broadcast) video);
+            dim = new Point(getCardWidth(), getCardHeight());
+        } else {
+            contentText = Utils.getContentDescription((Tagesschau24) video);
+            dim = new Point(getCardHeight(), getCardHeight());
         }
+
+        card.setTitleText(video.getTitle());
+        card.setContentText(contentText);
+        card.setMainImageDimensions(dim.x, dim.y);
+        card.setInfoAreaBackgroundColor(getContext()
+                .getColor(R.color.card_info_bg_color));
+
+        ((ViewHolder) viewHolder).updateCardViewImage(((ViewHolder) viewHolder)
+                .getCardView().getContext(), video.getImgUrl());
     }
 
     @Override

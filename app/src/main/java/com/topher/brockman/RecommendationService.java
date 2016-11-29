@@ -117,7 +117,8 @@ public class RecommendationService extends IntentService {
             try {
                 bitmap = Picasso.with(getApplicationContext())
                         .load(ts.getImgUrl())
-                        .resize(313, 176)
+                        .resize(616, 352)
+                        .centerCrop()
                         .get();
             } catch( IOException e ) {
                 Log.e(TAG, "Error retrieving recommendation image, setting default.");

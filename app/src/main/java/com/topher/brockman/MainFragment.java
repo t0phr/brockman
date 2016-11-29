@@ -48,7 +48,7 @@ public class MainFragment extends BrowseFragment
         super.onActivityCreated(savedInstanceState);
         setSearchAffordanceColor(R.color.card_info_bg_color);
         loadData();
-        setBadgeDrawable(getContext().getDrawable(R.drawable.logo));
+        //setBadgeDrawable(getContext().getDrawable(R.drawable.logo));
         setHeadersState(HEADERS_DISABLED);
         setOnItemViewClickedListener(this);
     }
@@ -82,7 +82,8 @@ public class MainFragment extends BrowseFragment
             ts_adapter.add(t);
         }
 
-        HeaderItem ts_header = new HeaderItem(adapter.size() - 1, "Tagesschau");
+        HeaderItem ts_header = new HeaderItem(adapter.size() - 1,
+                getResources().getString(R.string.row_headline_tagesschau));
         adapter.add(new ListRow(ts_header, ts_adapter));
 
 
@@ -92,7 +93,8 @@ public class MainFragment extends BrowseFragment
             tt_adapter.add(tt);
         }
 
-        HeaderItem tt_header = new HeaderItem(adapter.size() - 1, "Tagesthemen");
+        HeaderItem tt_header = new HeaderItem(adapter.size() - 1,
+                getResources().getString(R.string.row_headline_tagesthemen));
         adapter.add(new ListRow(tt_header, tt_adapter));
 
 
@@ -102,7 +104,8 @@ public class MainFragment extends BrowseFragment
             t20_adapter.add(t20);
         }
 
-        HeaderItem t20_header = new HeaderItem(adapter.size() - 1, "Tagesschau vor 20 Jahren");
+        HeaderItem t20_header = new HeaderItem(adapter.size() - 1,
+                getResources().getString(R.string.row_headline_tsvor20jahren));
         adapter.add(new ListRow(t20_header, t20_adapter));
 
         setAdapter(adapter);

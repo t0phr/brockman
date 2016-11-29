@@ -18,10 +18,12 @@
         http://www.tagesschau.de/api
     </string>
     <string name="api_t24_image_url">
-        <!--http://www.tagesschau.de/image/sendung/ard_portal_vorspann_ts.jpg-->
         http://www.tagesschau.de/multimedia/bilder/tagesschauapp104~_v-grossfrei16x9.jpg
     </string>
     <string name="ts24_date_substitute">
         live
     </string>
+    <string name="row_headline_tagesschau"></string>
+    <string name="row_headline_tagesthemen"></string>
+    <string name="row_headline_tsvor20jahren"></string>
 </resources>
